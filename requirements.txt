@@ -1,0 +1,2 @@
+bencoding>=0.2
+libtorrent>=2.0
