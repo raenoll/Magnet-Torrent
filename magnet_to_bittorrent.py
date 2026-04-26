@@ -55,25 +55,34 @@ def _add_magnet(session: "lt.session", magnet: str, save_path: Path):
     return lt.add_magnet_uri(session, magnet, {"save_path": str(save_path)})
 
 
+def magnet_to_torrent_bytes(magnet: str, timeout: int = 60) -> tuple[str, bytes]:
+    """Fetch metadata for a magnet URI and return (filename, .torrent bytes)."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        session = _make_session()
+        handle = _add_magnet(session, magnet, Path(tmp))
+        try:
+            deadline = time.time() + timeout
+            while not handle.has_metadata():
+                if time.time() > deadline:
+                    raise TimeoutError(f"metadata fetch timed out after {timeout}s")
+                time.sleep(1)
+            info = handle.get_torrent_info()
+            creator = lt.create_torrent(info)
+            torrent_data = lt.bencode(creator.generate())
+            return f"{_safe_filename(info.name())}.torrent", torrent_data
+        finally:
+            try:
+                session.remove_torrent(handle)
+            except Exception:
+                pass
+
+
 def magnet_to_torrent(magnet: str, out_dir: Path, timeout: int = 60) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
-    session = _make_session()
-    handle = _add_magnet(session, magnet, out_dir)
-
-    deadline = time.time() + timeout
-    while not handle.has_metadata():
-        if time.time() > deadline:
-            session.remove_torrent(handle)
-            raise TimeoutError(f"metadata fetch timed out after {timeout}s")
-        time.sleep(1)
-
-    info = handle.get_torrent_info()
-    creator = lt.create_torrent(info)
-    torrent_data = lt.bencode(creator.generate())
-
-    out_path = out_dir / f"{_safe_filename(info.name())}.torrent"
-    out_path.write_bytes(torrent_data)
-    session.remove_torrent(handle)
+    name, data = magnet_to_torrent_bytes(magnet, timeout=timeout)
+    out_path = out_dir / name
+    out_path.write_bytes(data)
     return out_path
 
 

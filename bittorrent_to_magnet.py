@@ -8,9 +8,8 @@ from pathlib import Path
 import bencoding
 
 
-def torrent_to_magnet(torrent_path: Path) -> str:
-    with open(torrent_path, "rb") as f:
-        meta = bencoding.bdecode(f.read())
+def torrent_bytes_to_magnet(data: bytes) -> str:
+    meta = bencoding.bdecode(data)
 
     if b"info" not in meta:
         raise ValueError("missing 'info' dictionary")
@@ -47,6 +46,10 @@ def torrent_to_magnet(torrent_path: Path) -> str:
 
     query = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
     return f"magnet:?{query}"
+
+
+def torrent_to_magnet(torrent_path: Path) -> str:
+    return torrent_bytes_to_magnet(Path(torrent_path).read_bytes())
 
 
 def iter_torrent_files(input_path: Path):

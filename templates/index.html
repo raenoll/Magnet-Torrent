@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Magnet ↔ Torrent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <h1>Magnet &harr; Torrent</h1>
+    <p>Batch conversion between <code>.torrent</code> files and magnet links.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Torrent &rarr; Magnet</h2>
+      <p>Drop or pick one or more <code>.torrent</code> files. Conversion runs in your browser session against the server.</p>
+      <label class="file-drop" id="drop">
+        <input type="file" id="torrent-files" accept=".torrent" multiple hidden>
+        <span>Click or drop <code>.torrent</code> files here</span>
+      </label>
+      <div id="to-magnet-status" class="status"></div>
+      <textarea id="magnet-output" rows="8" placeholder="Generated magnet links appear here…" readonly></textarea>
+      <div class="actions">
+        <button id="copy-magnets" type="button" disabled>Copy all</button>
+        <button id="download-magnets" type="button" disabled>Download .txt</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Magnet &rarr; Torrent</h2>
+      <p>Paste one magnet URI per line. The server joins the swarm via DHT and downloads metadata (BEP-9). May take a while per URI.</p>
+      <textarea id="magnet-input" rows="6" placeholder="magnet:?xt=urn:btih:..."></textarea>
+      <div class="row">
+        <label>Timeout (s)
+          <input id="to-torrent-timeout" type="number" value="60" min="10" max="600">
+        </label>
+        <button id="fetch-torrents" type="button">Fetch .torrent files</button>
+      </div>
+      <ul id="to-torrent-results" class="results"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <small>Magnet &rarr; Torrent requires <code>libtorrent</code> on the server and live peers in the swarm.</small>
+  </footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
