@@ -1,44 +1,43 @@
 # Magnet-Torrent
 
-Batch conversion between BitTorrent `.torrent` files and magnet links — as
-CLI scripts and as a small Flask web app.
+Two ways to convert between BitTorrent `.torrent` files and magnet links:
 
-## Install
-
-```sh
-pip install -r requirements.txt
-```
-
-`libtorrent` is only needed for the magnet → torrent direction. On
-Debian/Ubuntu the system package usually works better than pip:
-
-```sh
-sudo apt install python3-libtorrent
-```
+- **Web app** (this repo's `index.html`) — pure browser, zero dependencies.
+  Open it locally or host on GitHub Pages. Only does **torrent → magnet**;
+  see *Why no magnet → torrent in the browser?* below.
+- **Python CLI** — both directions; reverse needs `libtorrent`.
 
 ## Web app
 
+Open `index.html` in any modern browser, or serve the directory:
+
 ```sh
-python app.py
-# open http://localhost:5000
+python3 -m http.server 8000
+# open http://localhost:8000
 ```
 
-The page has two sections:
+Drop one or more `.torrent` files (or click to pick). Magnet links appear
+in the textbox; copy them or download as a `.txt`. Files are parsed
+locally with the Web Crypto API — nothing is uploaded.
 
-- **Torrent → Magnet**: drag-and-drop or pick `.torrent` files, get magnet
-  links back; copy all or download as a `.txt`.
-- **Magnet → Torrent**: paste one URI per line; the server joins the swarm
-  via DHT (BEP-9) and streams `.torrent` files back as they're ready, each
-  with a per-row download link.
+The generated magnet links include `xt` (info hash), `dn` (display name),
+`xl` (total length, summed for multi-file torrents) and every `tr`
+(trackers from `announce` + `announce-list`, deduped).
 
-Endpoints:
+### Why no magnet → torrent in the browser?
 
-| Method & path        | Body                                | Response                      |
-|----------------------|-------------------------------------|-------------------------------|
-| `POST /api/to-magnet` | multipart `torrents[]`              | JSON `{results:[{name, magnet\|error}]}` |
-| `POST /api/to-torrent` | JSON `{uris:[...], timeout:60}`     | NDJSON stream of `{uri, ok, filename, data_b64}` or `{uri, ok:false, error}` |
+A magnet link only carries the info_hash. To turn it back into a real
+`.torrent` you have to join the swarm and download the metadata over TCP
+or uTP (BEP-9). Browsers can't open raw sockets, so this direction needs
+a native client. Use the CLI below.
 
-## CLI
+## Python CLI
+
+```sh
+pip install -r requirements.txt
+# libtorrent is only needed for magnet → torrent; on Debian/Ubuntu
+# `sudo apt install python3-libtorrent` works better than pip.
+```
 
 ### Torrent → magnet
 
@@ -47,9 +46,6 @@ python bittorrent_to_magnet.py path/to/file.torrent
 python bittorrent_to_magnet.py ./torrents -o magnets.txt
 ```
 
-The generated magnet links include the `xt` (info hash), `dn` (display
-name), `xl` (total length), and all `tr` (trackers) from the torrent.
-
 ### Magnet → torrent
 
 ```sh
@@ -57,5 +53,5 @@ python magnet_to_bittorrent.py "magnet:?xt=urn:btih:..." -o ./out
 python magnet_to_bittorrent.py magnets.txt -o ./out -t 120
 ```
 
-Joins the BitTorrent swarm via DHT/peers and downloads metadata (BEP-9),
-then writes a real `.torrent` file. Needs network access and live peers.
+Joins the swarm via DHT/peers and downloads metadata (BEP-9), then writes
+a real `.torrent` file. Needs network access and live peers.

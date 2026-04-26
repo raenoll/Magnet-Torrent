@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Torrent → Magnet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Torrent &rarr; Magnet</h1>
+    <p>Batch convert <code>.torrent</code> files to magnet links.
+       Everything runs in your browser — no upload, no server.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <label class="file-drop" id="drop">
+        <input type="file" id="torrent-files" accept=".torrent" multiple hidden>
+        <span>Click or drop <code>.torrent</code> files here</span>
+      </label>
+      <div id="status" class="status"></div>
+      <textarea id="output" rows="10" placeholder="Generated magnet links appear here…" readonly></textarea>
+      <div class="actions">
+        <button id="copy" type="button" disabled>Copy all</button>
+        <button id="download" type="button" disabled>Download .txt</button>
+        <button id="clear" type="button" disabled>Clear</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>
+      Magnet &rarr; Torrent isn't supported here: browsers can't open raw TCP/UDP
+      sockets to BitTorrent peers. Use the included Python CLI for that.
+    </small>
+  </footer>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
